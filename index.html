@@ -1,0 +1,435 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Jersey City Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Schibsted+Grotesk:wght@600;700;800&display=swap">
+<style>
+/* Layout: an owner's report. Headline numbers first, then what is working, the trend, how you compare, where growth comes from, and a what-if calculator. */
+:root{
+  --bg:#f2f3ec; --surface:#fbfcf7; --sunk:#e9ebe0; --ink:#1c261b; --ink-2:#465244; --muted:#6f7a68; --line:#d9ddcf; --line-2:#c4c9b8;
+  --forest:#2e5838; --on-forest:#fbfcf7; --lime:#e2ecb0; --on-lime:#2a3816;
+  --bar:#3c7a4b; --bar-hover:#2e5838; --bar-ref:#b9bfae; --grid:#e1e4d8; --axis:#bfc4b2;
+  --good:#1d6f2b; --good-bg:#e0efdd; --warn:#7f5200; --warn-bg:#f8ecc9;
+  --f-display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111611; --surface:#182018; --sunk:#202920; --ink:#edf2e7; --ink-2:#bac4b3; --muted:#8e9986; --line:#2b352a; --line-2:#3a4638;
+  --forest:#a6cf93; --on-forest:#122012; --lime:#323e1d; --on-lime:#e2ecb0;
+  --bar:#7dbd89; --bar-hover:#a6cf93; --bar-ref:#4a5546; --grid:#253024; --axis:#3b4739;
+  --good:#86d48f; --good-bg:#1b301d; --warn:#eec163; --warn-bg:#352b12;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#111611; --surface:#182018; --sunk:#202920; --ink:#edf2e7; --ink-2:#bac4b3; --muted:#8e9986; --line:#2b352a; --line-2:#3a4638;
+  --forest:#a6cf93; --on-forest:#122012; --lime:#323e1d; --on-lime:#e2ecb0;
+  --bar:#7dbd89; --bar-hover:#a6cf93; --bar-ref:#4a5546; --grid:#253024; --axis:#3b4739;
+  --good:#86d48f; --good-bg:#1b301d; --warn:#eec163; --warn-bg:#352b12;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
+@media (max-width:520px){.wrap{padding-inline:16px}}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;color:var(--ink)}
+h1{font-size:clamp(28px,4.4vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.08}
+h2{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+h3{font-size:16.5px;font-weight:700;line-height:1.3}
+p{margin:0}
+b,strong{font-weight:650;color:var(--ink)}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--forest);outline-offset:2px;border-radius:4px}
+
+.masthead{padding-block:34px 8px;display:grid;gap:14px}
+.masthead .meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--ink-2);font-size:14px}
+.masthead .meta span{white-space:nowrap}
+.lede{max-width:66ch;color:var(--ink-2);font-size:16px}
+
+.glance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-block:22px 8px}
+.tile{background:var(--surface);padding:16px 18px;display:grid;gap:4px;align-content:start}
+.tile .k{font-size:13px;color:var(--ink-2)}
+.tile .v{font-family:var(--f-display);font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.tile .d{font-size:13px;color:var(--ink-2);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+@media (max-width:820px){.glance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.glance{grid-template-columns:1fr}}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:650;border-radius:999px;padding:2px 9px 2px 7px;line-height:1.5;white-space:nowrap}
+.chip svg{width:12px;height:12px;flex:none}
+.chip.good{background:var(--good-bg);color:var(--good)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.plain{background:var(--sunk);color:var(--ink-2)}
+
+.sec{padding-block:42px 4px;display:grid;gap:18px}
+.shead{display:grid;gap:6px;border-top:2px solid var(--ink);padding-top:14px}
+.shead p{color:var(--ink-2);max-width:70ch}
+
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:10px;align-content:start;min-width:0}
+.card p{color:var(--ink-2);font-size:14.5px}
+.try{border-top:1px dashed var(--line-2);padding-top:10px;display:grid;gap:6px;font-size:14px}
+.try div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}
+.try em{font-style:normal;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;gap:12px;min-width:0}
+.panel-head{display:flex;gap:10px 16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.panel-head .ttl{display:grid;gap:2px}
+.seggroup{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seggroup button{border:0;background:transparent;padding:5px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seggroup button+button{border-left:1px solid var(--line-2)}
+.seggroup button[aria-pressed="true"]{background:var(--forest);color:var(--on-forest)}
+.btn{appearance:none;border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:4px 9px;font-size:12.5px;font-weight:600;cursor:pointer;line-height:1.3}
+.btn:hover{background:var(--sunk)}
+.chartbox{position:relative;min-width:0}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible}
+.chartbox text{font-family:var(--f-body);font-size:11.5px;fill:var(--muted)}
+.chartbox text.lab{fill:var(--ink-2);font-weight:600;font-size:12px}
+.chartbox .hit{fill:transparent}
+.chartbox .hit:focus{outline:none}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.45;min-width:150px;transform:translate(-50%,-100%);white-space:nowrap;z-index:5}
+.tip b{color:var(--bg)}
+.tip .r{display:flex;justify-content:space-between;gap:14px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink-2);background:var(--sunk)}
+td{font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.foot{font-size:12.5px;color:var(--muted)}
+
+/* you vs median */
+.cmp{display:grid}
+.crow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.8fr) 132px;gap:8px 18px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow .m{font-size:14px;font-weight:600;min-width:0}
+.crow .m small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.pair{display:grid;gap:5px;min-width:0}
+.pr{display:grid;grid-template-columns:58px minmax(0,1fr) 64px;gap:8px;align-items:center;font-size:12.5px}
+.pr .who{color:var(--muted)}
+.pr .track{height:10px;background:transparent;position:relative}
+.pr .fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0}
+.pr.you .fill{background:var(--forest)}
+.pr.med .fill{background:var(--bar-ref)}
+.pr .val{text-align:right;font-variant-numeric:tabular-nums}
+.pr.you .val{font-weight:700;color:var(--ink)}
+.pr.med .val{color:var(--ink-2)}
+.crow .st{justify-self:start}
+@media (max-width:640px){.crow{grid-template-columns:minmax(0,1fr) auto}.crow .pair{grid-column:1 / -1;grid-row:2}}
+
+/* calculator */
+.calc{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:760px){.calc{grid-template-columns:1fr}}
+.sliders{display:grid;gap:18px}
+.sl{display:grid;gap:6px}
+.sl .lab{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:600}
+.sl .lab output{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.sl .hint{font-size:12.5px;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--forest);margin:0}
+.result{background:var(--lime);color:var(--on-lime);border-radius:var(--r);padding:18px 20px;display:grid;gap:6px}
+.result .k{font-size:13px;font-weight:600}
+.result .v{font-family:var(--f-display);font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.result .d{font-size:14px}
+.result .y{font-size:13px;opacity:.85}
+.calc .reset{justify-self:start}
+
+.upside{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.upside{grid-template-columns:1fr}}
+.up{border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;background:var(--surface);display:grid;gap:4px;align-content:start}
+.up .v{font-family:var(--f-display);font-size:24px;font-weight:700;letter-spacing:-.01em}
+.up p{font-size:13.5px;color:var(--ink-2)}
+
+details.data{border-top:1px solid var(--line);padding-block:18px 48px;margin-top:40px}
+details.data summary{cursor:pointer;font-weight:600;color:var(--ink-2)}
+details.data ul{margin:12px 0 0;padding-left:18px;color:var(--ink-2);font-size:13.5px;display:grid;gap:6px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<script type="application/json" id="data">{"monthly":[{"month":"2025-01","appts":6,"dogs":6,"revenue":771,"tips":121,"days":4,"rev_day":193,"dogs_day":1.5,"clients":6,"new":6,"cancels":1,"late":0,"ticket":128.5,"addon_rate":33.3,"booked_hrs_day":2.38},{"month":"2025-02","appts":14,"dogs":14,"revenue":1773,"tips":247,"days":12,"rev_day":148,"dogs_day":1.17,"clients":14,"new":14,"cancels":0,"late":0,"ticket":126.6,"addon_rate":28.6,"booked_hrs_day":1.8},{"month":"2025-03","appts":24,"dogs":24,"revenue":3151,"tips":443,"days":15,"rev_day":210,"dogs_day":1.6,"clients":24,"new":15,"cancels":4,"late":3,"ticket":131.3,"addon_rate":25.0,"booked_hrs_day":2.53},{"month":"2025-04","appts":23,"dogs":23,"revenue":2854,"tips":340,"days":12,"rev_day":238,"dogs_day":1.92,"clients":20,"new":11,"cancels":8,"late":2,"ticket":124.1,"addon_rate":21.7,"booked_hrs_day":2.85},{"month":"2025-05","appts":26,"dogs":27,"revenue":3408,"tips":574,"days":15,"rev_day":227,"dogs_day":1.8,"clients":24,"new":13,"cancels":10,"late":2,"ticket":131.1,"addon_rate":34.6,"booked_hrs_day":2.79},{"month":"2025-06","appts":35,"dogs":40,"revenue":4776,"tips":599,"days":19,"rev_day":251,"dogs_day":2.11,"clients":35,"new":17,"cancels":15,"late":5,"ticket":136.5,"addon_rate":22.9,"booked_hrs_day":3.17},{"month":"2025-07","appts":32,"dogs":35,"revenue":4226,"tips":432,"days":19,"rev_day":222,"dogs_day":1.84,"clients":31,"new":17,"cancels":21,"late":8,"ticket":132.0,"addon_rate":25.0,"booked_hrs_day":2.85},{"month":"2025-08","appts":23,"dogs":24,"revenue":2995,"tips":473,"days":16,"rev_day":187,"dogs_day":1.5,"clients":22,"new":6,"cancels":21,"late":4,"ticket":130.2,"addon_rate":17.4,"booked_hrs_day":2.38},{"month":"2025-09","appts":31,"dogs":31,"revenue":3570,"tips":534,"days":17,"rev_day":210,"dogs_day":1.82,"clients":30,"new":17,"cancels":24,"late":5,"ticket":115.1,"addon_rate":16.1,"booked_hrs_day":2.89},{"month":"2025-10","appts":36,"dogs":36,"revenue":4432,"tips":685,"days":20,"rev_day":222,"dogs_day":1.8,"clients":35,"new":15,"cancels":29,"late":6,"ticket":123.1,"addon_rate":22.2,"booked_hrs_day":2.91},{"month":"2025-11","appts":37,"dogs":38,"revenue":4684,"tips":706,"days":20,"rev_day":234,"dogs_day":1.9,"clients":36,"new":14,"cancels":25,"late":5,"ticket":126.6,"addon_rate":29.7,"booked_hrs_day":3.2},{"month":"2025-12","appts":30,"dogs":31,"revenue":3804,"tips":470,"days":19,"rev_day":200,"dogs_day":1.63,"clients":30,"new":9,"cancels":21,"late":1,"ticket":126.8,"addon_rate":20.0,"booked_hrs_day":2.61},{"month":"2026-01","appts":24,"dogs":24,"revenue":2891,"tips":524,"days":14,"rev_day":207,"dogs_day":1.71,"clients":24,"new":8,"cancels":17,"late":5,"ticket":120.5,"addon_rate":20.8,"booked_hrs_day":2.82},{"month":"2026-02","appts":37,"dogs":40,"revenue":4654,"tips":661,"days":18,"rev_day":259,"dogs_day":2.22,"clients":35,"new":11,"cancels":10,"late":4,"ticket":125.8,"addon_rate":13.5,"booked_hrs_day":3.43},{"month":"2026-03","appts":67,"dogs":73,"revenue":8583,"tips":1052,"days":25,"rev_day":343,"dogs_day":2.92,"clients":64,"new":28,"cancels":12,"late":4,"ticket":128.1,"addon_rate":10.4,"booked_hrs_day":4.55},{"month":"2026-04","appts":57,"dogs":62,"revenue":7243,"tips":884,"days":24,"rev_day":302,"dogs_day":2.58,"clients":53,"new":23,"cancels":19,"late":8,"ticket":127.1,"addon_rate":12.3,"booked_hrs_day":3.93},{"month":"2026-05","appts":56,"dogs":60,"revenue":6765,"tips":828,"days":21,"rev_day":322,"dogs_day":2.86,"clients":54,"new":19,"cancels":15,"late":7,"ticket":120.8,"addon_rate":10.7,"booked_hrs_day":4.38},{"month":"2026-06","appts":62,"dogs":68,"revenue":7887,"tips":1120,"days":25,"rev_day":315,"dogs_day":2.72,"clients":61,"new":15,"cancels":14,"late":7,"ticket":127.2,"addon_rate":21.0,"booked_hrs_day":4.22},{"month":"2026-07","appts":68,"dogs":73,"revenue":8416,"tips":1151,"days":23,"rev_day":366,"dogs_day":3.17,"clients":62,"new":22,"cancels":13,"late":4,"ticket":123.8,"addon_rate":17.6,"booked_hrs_day":4.9},{"month":"2026-08","appts":58,"dogs":61,"revenue":7130,"tips":930,"days":22,"rev_day":324,"dogs_day":2.77,"clients":57,"new":18,"cancels":14,"late":4,"ticket":122.9,"addon_rate":13.8,"booked_hrs_day":3.83},{"month":"2026-09","appts":54,"dogs":58,"revenue":6653,"tips":1000,"days":20,"rev_day":333,"dogs_day":2.9,"clients":52,"new":14,"cancels":13,"late":4,"ticket":123.2,"addon_rate":11.1,"booked_hrs_day":3.97}],"compare":[{"label":"Revenue per working day","unit":"$","dir":1,"dp":0,"jc":282.0,"median":386.0},{"label":"Dogs per working day","unit":"","dir":1,"dp":2,"jc":2.41,"median":3.99},{"label":"Hours booked per working day","unit":"h","dir":1,"dp":1,"jc":3.73,"median":5.2},{"label":"Working days per month","unit":"","dir":1,"dp":1,"jc":20.7,"median":20.8},{"label":"Revenue per dog","unit":"$","dir":1,"dp":0,"jc":117.35,"median":108.0},{"label":"New clients per month","unit":"","dir":1,"dp":1,"jc":16.6,"median":4.5},{"label":"Clients back from the year before","unit":"%","dir":1,"dp":0,"jc":40.4,"median":63.0},{"label":"Clients with 2+ visits","unit":"%","dir":1,"dp":0,"jc":45.2,"median":68.0},{"label":"Rebooked within 60 days","unit":"%","dir":1,"dp":0,"jc":50.9,"median":58.0},{"label":"Clients with a future booking","unit":"%","dir":1,"dp":0,"jc":25.9,"median":36.0},{"label":"Grooms booked online","unit":"%","dir":1,"dp":0,"jc":11.7,"median":24.0},{"label":"Cancelled within 24 hours","unit":"%","dir":-1,"dp":1,"jc":9.6,"median":5.0},{"label":"Add-ons, share of revenue","unit":"%","dir":1,"dp":1,"jc":3.3,"median":4.6},{"label":"Tip rate","unit":"%","dir":1,"dp":1,"jc":13.6,"median":14.6}],"calc":{"dogs":2.953846153846154,"days":21.666666666666668,"ticket":115.61458333333333}}</script>
+
+<header class="wrap masthead">
+  <div class="eyebrow">Hydrodog Jersey City · prepared for Paulo Taddone</div>
+  <h1>Jersey City scorecard</h1>
+  <div class="meta">
+    <span>First groom 20 Jan 2025</span>
+    <span>800 grooms since</span>
+    <span>From your MoeGo account, through 29 Sep 2026</span>
+  </div>
+  <p class="lede">Paulo, here is what your MoeGo data shows. Your business has doubled in a year, your days are fuller, and clients keep finding you. The biggest opportunities now are adding a dog or two to lighter days and turning more first-time clients into regulars.</p>
+</header>
+
+<main class="wrap">
+  <section class="glance" aria-label="Headline numbers">
+    <div class="tile"><div class="k">Q3 service revenue</div><div class="v">$22.2K</div><div class="d"><span class="chip good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2.6M2.9 5.6L6 2.4l3.1 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>+110%</span>vs $10.6K in Q3 2025</div></div>
+    <div class="tile"><div class="k">Revenue per working day, Q3</div><div class="v">$342</div><div class="d"><span class="chip good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2.6M2.9 5.6L6 2.4l3.1 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>+65%</span>vs $207 a year ago</div></div>
+    <div class="tile"><div class="k">Dogs per working day, Q3</div><div class="v">2.95</div><div class="d"><span class="chip good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2.6M2.9 5.6L6 2.4l3.1 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>+71%</span>vs 1.73 a year ago</div></div>
+    <div class="tile"><div class="k">Clients served, last 12 months</div><div class="v">242</div><div class="d">196 of them first-timers</div></div>
+    <div class="tile"><div class="k">Booked for the next 30 days</div><div class="v">60</div><div class="d"><span class="chip good"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2.6M2.9 5.6L6 2.4l3.1 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Up</span>vs 31 at this point in 2025</div></div>
+    <div class="tile"><div class="k">Average review rating</div><div class="v">4.9 / 5</div><div class="d">11 of 12 rated reviews are five stars</div></div>
+  </section>
+
+  <section class="sec" id="working">
+    <div class="shead"><h2>What's working</h2><p>These are real gains, and most of them come from habits you already have.</p></div>
+    <div class="cards">
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Growth</span>
+        <h3>Revenue has doubled in a year</h3>
+        <p>Q3 service revenue was <b>$22,198</b>, up from $10,561 in Q3 2025. So far this year you have done <b>$60,222</b>, against $27,294 over the same dates last year.</p>
+      </article>
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Productivity</span>
+        <h3>Fuller, steadier days</h3>
+        <p>In Q3 you averaged <b>$342 and 2.95 dogs</b> per working day, up from $207 and 1.73 a year earlier, while working 5.0 days a week instead of 3.9. Cancellations inside 24 hours fell from 16.8% to <b>6.2%</b>, and discounts dropped to 0.5% of revenue from 4.6% in Q2.</p>
+      </article>
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>New clients</span>
+        <h3>Clients keep finding you</h3>
+        <p><b>196 first-time clients</b> in the last 12 months, about 16 a month. The typical Hydrodog location adds 4.5 a month.</p>
+      </article>
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Ticket</span>
+        <h3>A premium ticket</h3>
+        <p>You average <b>$117 per dog</b>, above the network median of $108. Most of your work is small-dog haircuts and baths, priced at $110 and $90.</p>
+      </article>
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Rebooking</span>
+        <h3>You book the next groom before you leave</h3>
+        <p><b>69% of grooms</b> end with the next appointment already on the calendar. You have <b>60 appointments</b> booked for the next 30 days, almost twice the 31 you had at this point last year.</p>
+      </article>
+      <article class="card">
+        <span class="chip good" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.3l2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Route and reputation</span>
+        <h3>A tight route and clients who rave</h3>
+        <p><b>81% of your appointments</b> are within 3 miles of each other, so very little of your day goes to driving. 11 of your 12 rated reviews are five stars, and clients mention you by name.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="trend">
+    <div class="shead"><h2>Your trend</h2><p>Month by month since your first groom. Switch the view to see grooms, dogs per working day or new clients.</p></div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="ttl"><div class="eyebrow">Monthly, Jan 2025 to Sep 2026</div><h3 id="chartTitle">Service revenue</h3></div>
+        <div class="seggroup" id="metricSwitch" role="group" aria-label="Chart metric">
+          <button type="button" data-m="revenue" aria-pressed="true">Revenue</button>
+          <button type="button" data-m="appts" aria-pressed="false">Grooms</button>
+          <button type="button" data-m="dogs_day" aria-pressed="false">Dogs per day</button>
+          <button type="button" data-m="new" aria-pressed="false">New clients</button>
+        </div>
+      </div>
+      <div class="chartbox" id="chart"></div>
+      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <p class="foot">Revenue excludes tips and sales tax. September 2026 runs through the 29th. Hover or tab through the bars for each month's detail.</p>
+        <button class="btn" type="button" id="tableToggle" aria-expanded="false">Show table</button>
+      </div>
+      <div class="tablewrap" id="monthTable" hidden></div>
+    </div>
+  </section>
+
+  <section class="sec" id="compare">
+    <div class="shead"><h2>How you compare</h2><p>Your numbers next to the median of Hydrodog's established locations. Other locations' figures stay private; only the middle value is shown.</p></div>
+    <div class="panel">
+      <div class="panel-head"><div class="ttl"><div class="eyebrow">Sep 2025 to Aug 2026 · 12 locations with 300+ grooms</div><h3>You vs the network median</h3></div></div>
+      <div class="cmp" id="cmp"></div>
+      <p class="foot">This window ends in August, so your stronger Q3 shows only in part: 2.95 dogs and $342 per working day in Q3, against 2.41 and $282 over this window.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="growth">
+    <div class="shead"><h2>Where the next growth comes from</h2><p>Ordered by how much each one could add. The first two matter most.</p></div>
+    <div class="cards">
+      <article class="card">
+        <span class="chip warn" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></svg>Opportunity</span>
+        <h3>Fill the open time in your days</h3>
+        <p>You averaged 2.95 dogs per working day in Q3; the median location does about 4.0. Over the last 12 months, <b>147 of your 251 working days</b> had one or two appointments, with a typical 45 minutes between grooms. Because your route is tight, each extra dog is mostly grooming time rather than driving.</p>
+        <div class="try"><div><em>Try</em><span>Fill the days you are already in a neighborhood before opening a new day, and offer short-notice openings to nearby clients.</span></div></div>
+      </article>
+      <article class="card">
+        <span class="chip warn" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></svg>Opportunity</span>
+        <h3>Turn first visits into regulars</h3>
+        <p>Of the clients whose first groom was more than 90 days ago, <b>129 of 259</b> have not booked again. Your regulars come back about every 6 weeks, so each new client who sticks is worth roughly 8 grooms a year.</p>
+        <div class="try"><div><em>Try</em><span>Book the second groom before you leave the first, and send a thank-you text with a rebooking link a few days later.</span></div></div>
+      </article>
+      <article class="card">
+        <span class="chip warn" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></svg>Opportunity</span>
+        <h3>Reply to new inquiries</h3>
+        <p>MoeGo lists <b>128 people who reached out</b> as leads with no follow-up recorded, 56 of them in the last 90 days. Another 374 client profiles have never had an appointment, 282 of them created through online booking. If you have already reached some of them by phone or text, updating MoeGo keeps these numbers accurate.</p>
+        <div class="try"><div><em>Try</em><span>Set aside a short block each day for replies, with a saved message listing your next open days.</span></div><div><em>HQ</em><span>We can pull the full list from MoeGo for you.</span></div></div>
+      </article>
+      <article class="card">
+        <span class="chip warn" style="justify-self:start"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="6" r="1.6" fill="currentColor"/></svg>Opportunity</span>
+        <h3>Welcome back past regulars</h3>
+        <p><b>41 clients who came at least twice</b> have not booked in 3 to 12 months, and 22 of them came three or more times. Another 11 regulars are 60 to 90 days past their last groom with nothing booked.</p>
+        <div class="try"><div><em>Try</em><span>A personal check-in text from you, with two or three open times to pick from.</span></div><div><em>HQ</em><span>We can pull this list from MoeGo for you.</span></div></div>
+      </article>
+      <article class="card">
+        <span class="chip plain" style="justify-self:start">Worth a look</span>
+        <h3>Keep pre-booked grooms on the calendar</h3>
+        <p>Of 512 next appointments booked at the van, 159 (31%) were later cancelled or moved. Some are reschedules, which MoeGo records as a cancellation.</p>
+        <div class="try"><div><em>Try</em><span>Check that MoeGo reminders go out a couple of days ahead and ask clients to confirm.</span></div></div>
+      </article>
+      <article class="card">
+        <span class="chip plain" style="justify-self:start">Worth a look</span>
+        <h3>Add-ons and reviews</h3>
+        <p>Add-ons were on 14% of grooms this year, down from 24% in 2025; teeth brushing is 64 of the 110 sold in the last 12 months. Your last rated review in MoeGo came in July 2025.</p>
+        <div class="try"><div><em>Try</em><span>Offer one add-on at every groom, and ask happy clients for a Google review before you leave.</span></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec" id="whatif">
+    <div class="shead"><h2>Play with the numbers</h2><p>Monthly service revenue is dogs per day × working days × revenue per dog. The sliders start at your Q3 pace; move them to see what a change would mean.</p></div>
+    <div class="panel calc">
+      <div class="sliders">
+        <div class="sl"><div class="lab"><label for="sDogs">Dogs per working day</label><output id="oDogs" for="sDogs"></output></div><input type="range" id="sDogs" min="2" max="5.5" step="0.05"><div class="hint">Q3: 2.95 · network median about 4.0</div></div>
+        <div class="sl"><div class="lab"><label for="sDays">Working days per month</label><output id="oDays" for="sDays"></output></div><input type="range" id="sDays" min="12" max="26" step="0.5"><div class="hint">Q3: 21.7</div></div>
+        <div class="sl"><div class="lab"><label for="sTicket">Revenue per dog</label><output id="oTicket" for="sTicket"></output></div><input type="range" id="sTicket" min="95" max="145" step="1"><div class="hint">Q3: $116, before tips and tax</div></div>
+        <button class="btn reset" type="button" id="calcReset">Back to Q3 pace</button>
+      </div>
+      <div class="result" aria-live="polite">
+        <div class="k">Monthly service revenue</div>
+        <div class="v" id="rMonth"></div>
+        <div class="d" id="rDiff"></div>
+        <div class="y" id="rYear"></div>
+      </div>
+    </div>
+    <div class="upside">
+      <div class="up"><div class="eyebrow">Half a dog more a day</div><div class="v">+$1,250/mo</div><p>At $116 a dog and about 22 working days a month.</p></div>
+      <div class="up"><div class="eyebrow">Win back regulars</div><div class="v">$5,060</div><p>One groom from each of the 41 lapsed regulars at your $123 average ticket, before any repeat visits.</p></div>
+      <div class="up"><div class="eyebrow">Answer inquiries</div><div class="v">$1,730</div><p>First grooms from booking one in four of the 56 leads from the last 90 days.</p></div>
+    </div>
+  </section>
+
+  <details class="data">
+    <summary>How these numbers were built</summary>
+    <ul>
+      <li>All figures come from your MoeGo account, pulled 30 Sep 2026 and running through 29 Sep 2026.</li>
+      <li>A groom is an appointment marked Finished. Revenue is the appointment total minus tips and sales tax, so tips are on top of every revenue figure here.</li>
+      <li>Per-day figures divide by the days you had at least one finished groom.</li>
+      <li>"Booked before you leave" means the next appointment was created by the day after the groom.</li>
+      <li>The network comparison covers Sep 2025 to Aug 2026 and uses the 12 locations with at least 300 grooms in that window. Per-day figures are per van.</li>
+      <li>The dollar figures under the calculator are simple multiplication at your Q3 prices, not a forecast.</li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(function(){
+"use strict";
+const D=JSON.parse(document.getElementById('data').textContent);
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const mlab=m=>MON[+m.slice(5)-1]+' ’'+m.slice(2,4);
+const mlong=m=>FULL[+m.slice(5)-1]+' '+m.slice(0,4);
+const money=v=>'$'+Math.round(v).toLocaleString('en-US');
+
+/* ---------- monthly chart ---------- */
+const MET={
+  revenue:{title:'Service revenue',get:r=>r.revenue,fmt:money,tick:v=>v>=1000?'$'+(v/1000)+'K':'$'+v},
+  appts:{title:'Completed grooms',get:r=>r.appts,fmt:v=>String(v),tick:v=>String(v)},
+  dogs_day:{title:'Dogs per working day',get:r=>r.dogs_day,fmt:v=>v.toFixed(2),tick:v=>v.toFixed(1)},
+  new:{title:'New clients',get:r=>r.new,fmt:v=>String(v),tick:v=>String(v)}
+};
+let metric='revenue';
+function niceStep(max,n){const raw=max/n,p=Math.pow(10,Math.floor(Math.log10(raw)));const f=raw/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+const chart=$('#chart');
+const tip=document.createElement('div');tip.className='tip';tip.hidden=true;
+function drawChart(){
+  const M=MET[metric], rows=D.monthly, n=rows.length;
+  $('#chartTitle').textContent=M.title;
+  const W=Math.max(300,chart.clientWidth||700), H=W<520?210:250;
+  const L=W<520?40:48,R=8,Tp=26,B=26,pw=W-L-R,ph=H-Tp-B;
+  const vals=rows.map(M.get), vmax=Math.max(...vals);
+  const step=niceStep(vmax,4), top=Math.ceil(vmax/step)*step;
+  const y=v=>Tp+ph-(v/top)*ph, band=pw/n, bw=Math.min(24,band*0.64);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+M.title+' by month, January 2025 to September 2026">';
+  for(let v=0;v<=top+1e-9;v+=step){
+    const yy=y(v).toFixed(1);
+    s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var('+(v===0?'--axis':'--grid')+')" stroke-width="1"/>';
+    s+='<text x="'+(L-8)+'" y="'+(+yy+4)+'" text-anchor="end">'+M.tick(Math.round(v*100)/100)+'</text>';
+  }
+  const every=W<520?6:3, peak=vals.indexOf(vmax), last=n-1;
+  rows.forEach((r,i)=>{
+    const v=vals[i], x=L+band*i+(band-bw)/2, yy=y(v), h=Tp+ph-yy, rad=Math.min(4,h);
+    if(h>0) s+='<path class="bar" data-i="'+i+'" fill="var(--bar)" d="M'+x.toFixed(1)+','+(Tp+ph)+'V'+(yy+rad).toFixed(1)+'Q'+x.toFixed(1)+','+yy.toFixed(1)+' '+(x+rad).toFixed(1)+','+yy.toFixed(1)+'H'+(x+bw-rad).toFixed(1)+'Q'+(x+bw).toFixed(1)+','+yy.toFixed(1)+' '+(x+bw).toFixed(1)+','+(yy+rad).toFixed(1)+'V'+(Tp+ph)+'Z"/>';
+    if((i%every===0)||i===last) s+='<text x="'+(L+band*i+band/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+mlab(r.month)+'</text>';
+    if(i===peak||i===last) s+='<text class="lab" x="'+(L+band*i+band/2).toFixed(1)+'" y="'+(yy-7).toFixed(1)+'" text-anchor="middle">'+M.fmt(v)+'</text>';
+  });
+  rows.forEach((r,i)=>{s+='<rect class="hit" tabindex="0" data-i="'+i+'" x="'+(L+band*i).toFixed(1)+'" y="'+Tp+'" width="'+band.toFixed(1)+'" height="'+ph+'" aria-label="'+mlong(r.month)+': '+M.fmt(vals[i])+'"/>';});
+  s+='</svg>';
+  chart.innerHTML=s;chart.appendChild(tip);tip.hidden=true;
+  const show=i=>{
+    const r=rows[i];
+    tip.innerHTML='<b>'+mlong(r.month)+(r.month==='2026-09'?' (to 29th)':'')+'</b>'+
+      '<div class="r"><span>Revenue</span><span>'+money(r.revenue)+'</span></div>'+
+      '<div class="r"><span>Grooms</span><span>'+r.appts+'</span></div>'+
+      '<div class="r"><span>Working days</span><span>'+r.days+'</span></div>'+
+      '<div class="r"><span>Dogs per day</span><span>'+r.dogs_day.toFixed(2)+'</span></div>'+
+      '<div class="r"><span>New clients</span><span>'+r.new+'</span></div>';
+    tip.hidden=false;
+    const cx=(L+band*i+band/2)/W*chart.clientWidth, cy=y(vals[i])/H*chart.clientHeight;
+    const half=tip.offsetWidth/2, cw=chart.clientWidth;
+    tip.style.left=Math.max(half,Math.min(cw-half,cx))+'px';tip.style.top=(cy-10)+'px';
+    $$('.bar',chart).forEach(b=>b.setAttribute('fill',+b.dataset.i===i?'var(--bar-hover)':'var(--bar)'));
+  };
+  const hide=()=>{tip.hidden=true;$$('.bar',chart).forEach(b=>b.setAttribute('fill','var(--bar)'));};
+  $$('.hit',chart).forEach(h=>{const i=+h.dataset.i;h.addEventListener('mouseenter',()=>show(i));h.addEventListener('focus',()=>show(i));h.addEventListener('mouseleave',hide);h.addEventListener('blur',hide);});
+}
+$$('#metricSwitch button').forEach(b=>b.addEventListener('click',()=>{metric=b.dataset.m;$$('#metricSwitch button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawChart();}));
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,120)});
+drawChart();
+(function(){
+  let h='<table><thead><tr><th>Month</th><th>Grooms</th><th>Dogs</th><th>Revenue</th><th>Tips</th><th>Working days</th><th>$ per day</th><th>Dogs per day</th><th>Clients</th><th>New</th></tr></thead><tbody>';
+  D.monthly.forEach(r=>{h+='<tr><td>'+mlab(r.month)+'</td><td>'+r.appts+'</td><td>'+r.dogs+'</td><td>'+money(r.revenue)+'</td><td>'+money(r.tips)+'</td><td>'+r.days+'</td><td>'+money(r.rev_day)+'</td><td>'+r.dogs_day.toFixed(2)+'</td><td>'+r.clients+'</td><td>'+r.new+'</td></tr>'});
+  $('#monthTable').innerHTML=h+'</tbody></table>';
+})();
+$('#tableToggle').addEventListener('click',e=>{const t=$('#monthTable');t.hidden=!t.hidden;e.currentTarget.setAttribute('aria-expanded',String(!t.hidden));e.currentTarget.textContent=t.hidden?'Show table':'Hide table';});
+
+/* ---------- you vs median ---------- */
+(function(){
+  const box=$('#cmp');
+  const fmtv=(b,v)=>{const s=v.toLocaleString('en-US',{minimumFractionDigits:b.dp,maximumFractionDigits:b.dp});return b.unit==='$'?'$'+s:b.unit==='%'?s+'%':b.unit==='h'?s+' h':s;};
+  const up='<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 10V2.6M2.9 5.6L6 2.4l3.1 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  let h='';
+  D.compare.forEach(b=>{
+    const mx=Math.max(b.jc,b.median)*1.08||1;
+    const ratio=b.dir>0?b.jc/b.median:b.median/b.jc;
+    const st=ratio>=1.05?'<span class="chip good">'+up+'Ahead</span>':ratio>=0.95?'<span class="chip plain">On par</span>':'<span class="chip warn">Room to grow</span>';
+    h+='<div class="crow"><span class="m">'+b.label+'<small>'+(b.dir<0?'Lower is better':'Higher is better')+'</small></span>'+
+      '<div class="pair"><div class="pr you"><span class="who">You</span><span class="track"><span class="fill" style="width:'+(b.jc/mx*100).toFixed(1)+'%"></span></span><span class="val">'+fmtv(b,b.jc)+'</span></div>'+
+      '<div class="pr med"><span class="who">Median</span><span class="track"><span class="fill" style="width:'+(b.median/mx*100).toFixed(1)+'%"></span></span><span class="val">'+fmtv(b,b.median)+'</span></div></div>'+
+      '<span class="st">'+st+'</span></div>';
+  });
+  box.innerHTML=h;
+})();
+
+/* ---------- what-if calculator ---------- */
+(function(){
+  const base=D.calc, s={dogs:base.dogs,days:base.days,ticket:base.ticket};
+  const baseMonth=base.dogs*base.days*base.ticket;
+  const el={dogs:$('#sDogs'),days:$('#sDays'),ticket:$('#sTicket')};
+  function paint(){
+    $('#oDogs').textContent=s.dogs.toFixed(2);
+    $('#oDays').textContent=s.days.toFixed(1);
+    $('#oTicket').textContent='$'+Math.round(s.ticket);
+    const m=s.dogs*s.days*s.ticket, d=m-baseMonth;
+    $('#rMonth').textContent=money(m);
+    $('#rDiff').textContent=Math.abs(d)<1?'Your Q3 pace':(d>0?'+':'−')+money(Math.abs(d)).slice(0)+' a month vs your Q3 pace';
+    $('#rYear').textContent='About '+money(m*12)+' a year, before tips';
+  }
+  function setAll(){el.dogs.value=s.dogs;el.days.value=s.days;el.ticket.value=s.ticket;paint();}
+  el.dogs.addEventListener('input',()=>{s.dogs=+el.dogs.value;paint();});
+  el.days.addEventListener('input',()=>{s.days=+el.days.value;paint();});
+  el.ticket.addEventListener('input',()=>{s.ticket=+el.ticket.value;paint();});
+  $('#calcReset').addEventListener('click',()=>{s.dogs=base.dogs;s.days=base.days;s.ticket=base.ticket;setAll();});
+  setAll();
+})();
+})();
+</script>
+
+</body></html>
